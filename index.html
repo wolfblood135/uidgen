@@ -70,18 +70,41 @@
     .edit-btn:hover {
       background-color: #cc8400;
     }
+
+    #login-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+
+    #login-section input {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      width: 200px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>32-bit Unique ID Generator</h1>
-  <button onclick="generateUID()">Generate UID</button>
-  <div id="output"></div>
+  <div id="login-section">
+    <h1>Login</h1>
+    <input type="password" id="password" placeholder="Enter Password" />
+    <button onclick="checkPassword()">Login</button>
+  </div>
 
-  <div id="history">
-    <details>
-      <summary>View Generated UIDs</summary>
-      <ul id="uidList"></ul>
-    </details>
+  <div id="main-content" style="display: none;">
+    <h1>32-bit Unique ID Generator</h1>
+    <button onclick="generateUID()">Generate UID</button>
+    <div id="output"></div>
+
+    <div id="history">
+      <details>
+        <summary>View Generated UIDs</summary>
+        <ul id="uidList"></ul>
+      </details>
+    </div>
   </div>
 
   <!-- Firebase SDKs -->
@@ -91,17 +114,32 @@
   <script>
     // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyB1IUoArO_XZb7-dgo1XKeu9vWcgNBDJWQ",
+     apiKey: "AIzaSyB1IUoArO_XZb7-dgo1XKeu9vWcgNBDJWQ",
   authDomain: "uidgen-364db.firebaseapp.com",
   projectId: "uidgen-364db",
   storageBucket: "uidgen-364db.firebasestorage.app",
   messagingSenderId: "768132034965",
   appId: "1:768132034965:web:c12d77da876507cc6e469c"
+
     };
 
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    const PASSWORD = "20022002"; // Password for accessing the system
+
+    // Check password and show main content
+    function checkPassword() {
+      const enteredPassword = document.getElementById('password').value;
+      if (enteredPassword === PASSWORD) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        loadUIDs(); // Load existing UIDs
+      } else {
+        alert("Incorrect password!");
+      }
+    }
 
     // Generate a 32-bit UID and save to Firebase
     function generateUID() {
@@ -157,9 +195,6 @@
         console.error('Failed to copy UID: ', err);
       });
     }
-
-    // Load UIDs on page load
-    window.onload = loadUIDs;
   </script>
 </body>
 </html>
