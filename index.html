@@ -56,21 +56,6 @@
       background-color: #0056b3;
     }
 
-    .edit-btn {
-      margin-left: 10px;
-      padding: 5px 10px;
-      font-size: 14px;
-      background-color: #FFA500;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .edit-btn:hover {
-      background-color: #cc8400;
-    }
-
     #login-section {
       display: flex;
       flex-direction: column;
@@ -114,26 +99,38 @@
   <script>
     // Firebase configuration
     const firebaseConfig = {
-     apiKey: "AIzaSyB1IUoArO_XZb7-dgo1XKeu9vWcgNBDJWQ",
-  authDomain: "uidgen-364db.firebaseapp.com",
+      apiKey: "AIzaSyB1IUoArO_XZb7-dgo1XKeu9vWcgNBDJWQ",
+      authDomain: "uidgen-364db.firebaseapp.com",
       databaseURL: "https://uidgen-364db-default-rtdb.firebaseio.com/",
-  projectId: "uidgen-364db",
-  storageBucket: "uidgen-364db.firebasestorage.app",
-  messagingSenderId: "768132034965",
-  appId: "1:768132034965:web:c12d77da876507cc6e469c"
-
+      projectId: "uidgen-364db",
+      storageBucket: "uidgen-364db.firebasestorage.app",
+      messagingSenderId: "768132034965",
+      appId: "1:768132034965:web:c12d77da876507cc6e469c"
     };
 
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const PASSWORD = "20022002"; // Password for accessing the system
+    // Precomputed hash of the password "20022002"
+    const STORED_PASSWORD_HASH = "b79b34a3c1e0c74f64621f46b94cce23f3124e36642b5ae1735ef6bc4301f759";
+
+    // Function to hash a given string using SHA-256
+    async function hashString(str) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
 
     // Check password and show main content
-    function checkPassword() {
+    async function checkPassword() {
       const enteredPassword = document.getElementById('password').value;
-      if (enteredPassword === PASSWORD) {
+      const hashedPassword = await hashString(enteredPassword);
+
+      if (hashedPassword === STORED_PASSWORD_HASH) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
         loadUIDs(); // Load existing UIDs
@@ -159,20 +156,8 @@
     function updateUIDList(uid) {
       const uidList = document.getElementById('uidList');
       const listItem = document.createElement('li');
-      listItem.innerHTML = `${uid} <button class="edit-btn" onclick="editUID(${uid})">Edit</button>`;
+      listItem.textContent = uid;
       uidList.appendChild(listItem);
-    }
-
-    // Edit a UID in Firebase
-    function editUID(uid) {
-      const newUID = prompt(`Edit UID (current: ${uid}):`);
-      if (newUID && !isNaN(newUID)) {
-        firebase.database().ref('uids/' + uid).remove()
-          .then(() => {
-            firebase.database().ref('uids/' + newUID).set({ uid: newUID })
-              .then(() => location.reload());
-          });
-      }
     }
 
     // Load existing UIDs from Firebase
@@ -182,7 +167,7 @@
         snapshot.forEach(childSnapshot => {
           const uid = childSnapshot.val().uid;
           const listItem = document.createElement('li');
-          listItem.innerHTML = `${uid} <button class="edit-btn" onclick="editUID(${uid})">Edit</button>`;
+          listItem.textContent = uid;
           uidList.appendChild(listItem);
         });
       });
