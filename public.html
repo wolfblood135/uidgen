@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>32-bit Unique ID Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>32-bit Unique ID Generator</h1>
+  <button onclick="generateUID()">Generate UID</button>
+  <div id="output"></div>
+
+  <script>
+    // Function to generate a 32-bit UID
+    function generateUID() {
+      const maxUID = 4294967295; // Maximum value for 32-bit
+      let usedUIDs = JSON.parse(localStorage.getItem('usedUIDs')) || [];
+
+      if (usedUIDs.length >= maxUID + 1) {
+        document.getElementById('output').innerText = 'All possible UIDs have been generated!';
+        return;
+      }
+
+      let uid;
+      do {
+        uid = Math.floor(Math.random() * (maxUID + 1));
+      } while (usedUIDs.includes(uid));
+
+      usedUIDs.push(uid);
+      localStorage.setItem('usedUIDs', JSON.stringify(usedUIDs));
+
+      document.getElementById('output').innerText = `Generated UID: ${uid}`;
+    }
+  </script>
+</body>
+</html>
