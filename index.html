@@ -78,13 +78,27 @@
     details summary {
       cursor: pointer;
     }
+
+    #version {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 14px;
+      color: #333;
+      background-color: #f8f8f8;
+      padding: 5px 10px;
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
 <body>
+  <div id="version">Version: 1.0.1</div>
+
   <div id="main-content">
     <h1>32-bit Unique ID Generator</h1>
     <button onclick="generateUID()">Generate UID</button>
-    <div id="output" onclick="copyToClipboard(generatedUID)"></div>
+    <div id="output"></div>
 
     <div id="history">
       <details id="uidHistory">
@@ -121,10 +135,17 @@
       localStorage.setItem('uids', JSON.stringify(uids));
 
       document.getElementById('output').innerHTML = `Generated UID: ${uid}`;
-      document.getElementById('output').onclick = () => copyToClipboard(uid); // Set copy action for generated UID
+
+      // Automatically copy UID to clipboard
+      copyToClipboard(uid);
 
       updateUIDList(uid, timestamp);
-      document.getElementById('copiedMessage').style.display = 'none'; // Hide "Copied" message
+      document.getElementById('copiedMessage').style.display = 'block'; // Show "Copied" message
+
+      // Hide "Copied" message after 2 seconds
+      setTimeout(() => {
+        document.getElementById('copiedMessage').style.display = 'none';
+      }, 2000);
 
       // Ensure the history section is open when there are UIDs in the list
       if (uids.length > 0) {
