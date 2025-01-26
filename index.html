@@ -55,6 +55,12 @@
     .copy-btn:hover {
       background-color: #0056b3;
     }
+
+    #copiedMessage {
+      font-size: 14px;
+      margin-top: 10px;
+      color: green;
+    }
   </style>
 </head>
 <body>
@@ -69,6 +75,8 @@
         <ul id="uidList"></ul>
       </details>
     </div>
+
+    <div id="copiedMessage" style="display:none;">Copied</div>
   </div>
 
   <script>
@@ -81,8 +89,15 @@
       uids.push(uid);
       localStorage.setItem('uids', JSON.stringify(uids));
 
-      document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
+      document.getElementById('output').innerHTML = `Generated UID: ${uid}`;
       updateUIDList(uid);
+
+      // Copy UID to clipboard automatically
+      navigator.clipboard.writeText(uid).then(() => {
+        document.getElementById('copiedMessage').style.display = 'block'; // Show "Copied"
+      }).catch(err => {
+        console.error('Failed to copy UID: ', err);
+      });
     }
 
     // Update the UID list displayed in the UI
@@ -101,15 +116,6 @@
         const listItem = document.createElement('li');
         listItem.textContent = uid;
         uidList.appendChild(listItem);
-      });
-    }
-
-    // Copy UID to clipboard
-    function copyToClipboard(uid) {
-      navigator.clipboard.writeText(uid).then(() => {
-        alert(`UID ${uid} copied to clipboard!`);
-      }).catch(err => {
-        console.error('Failed to copy UID: ', err);
       });
     }
 
