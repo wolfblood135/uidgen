@@ -28,17 +28,34 @@
     #output {
       margin-top: 20px;
       font-size: 18px;
+      cursor: pointer;
+      color: #007BFF;
     }
 
     #history {
       margin-top: 20px;
       text-align: left;
       display: inline-block;
-      width: 300px;
+      width: 100%;
     }
 
-    details {
-      margin-top: 10px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f2f2f2;
     }
 
     .copy-btn {
@@ -67,55 +84,90 @@
   <div id="main-content">
     <h1>32-bit Unique ID Generator</h1>
     <button onclick="generateUID()">Generate UID</button>
-    <div id="output"></div>
+    <div id="output" onclick="copyToClipboard(generatedUID)"></div>
 
     <div id="history">
-      <details>
-        <summary>View Generated UIDs</summary>
-        <ul id="uidList"></ul>
-      </details>
+      <table id="uidTable">
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Generated At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="uidList"></tbody>
+      </table>
     </div>
 
     <div id="copiedMessage" style="display:none;">Copied</div>
   </div>
 
   <script>
+    let generatedUID = null; // Holds the generated UID for easy reference
+
     // Generate a 32-bit UID and save it to localStorage
     function generateUID() {
       const maxUID = 4294967295;
       const uid = Math.floor(Math.random() * (maxUID + 1));
+      const currentDate = new Date();
+      const timestamp = currentDate.toLocaleString();
+
+      generatedUID = uid;
 
       let uids = JSON.parse(localStorage.getItem('uids')) || [];
-      uids.push(uid);
+      uids.push({ uid, timestamp });
       localStorage.setItem('uids', JSON.stringify(uids));
 
       document.getElementById('output').innerHTML = `Generated UID: ${uid}`;
-      updateUIDList(uid);
+      document.getElementById('output').onclick = () => copyToClipboard(uid); // Set copy action for generated UID
 
-      // Copy UID to clipboard automatically
-      navigator.clipboard.writeText(uid).then(() => {
-        document.getElementById('copiedMessage').style.display = 'block'; // Show "Copied"
-      }).catch(err => {
-        console.error('Failed to copy UID: ', err);
-      });
+      updateUIDList(uid, timestamp);
+      document.getElementById('copiedMessage').style.display = 'none'; // Hide "Copied" message
     }
 
-    // Update the UID list displayed in the UI
-    function updateUIDList(uid) {
+    // Update the UID table with the newly generated UID and timestamp
+    function updateUIDList(uid, timestamp) {
       const uidList = document.getElementById('uidList');
-      const listItem = document.createElement('li');
-      listItem.textContent = uid;
-      uidList.appendChild(listItem);
+      const row = document.createElement('tr');
+
+      // Create UID cell
+      const uidCell = document.createElement('td');
+      uidCell.textContent = uid;
+      row.appendChild(uidCell);
+
+      // Create Timestamp cell
+      const timestampCell = document.createElement('td');
+      timestampCell.textContent = timestamp;
+      row.appendChild(timestampCell);
+
+      // Create Actions cell with copy button
+      const actionsCell = document.createElement('td');
+      const copyButton = document.createElement('button');
+      copyButton.classList.add('copy-btn');
+      copyButton.textContent = 'Copy';
+      copyButton.onclick = () => copyToClipboard(uid);
+      actionsCell.appendChild(copyButton);
+      row.appendChild(actionsCell);
+
+      // Add the row to the table
+      uidList.appendChild(row);
     }
 
-    // Load existing UIDs from localStorage
+    // Load existing UIDs from localStorage and display them in the table
     function loadUIDs() {
       const uidList = document.getElementById('uidList');
       const uids = JSON.parse(localStorage.getItem('uids')) || [];
-      uids.forEach(uid => {
-        const listItem = document.createElement('li');
-        listItem.textContent = uid;
-        uidList.appendChild(listItem);
+      uids.forEach(uidObj => {
+        updateUIDList(uidObj.uid, uidObj.timestamp);
+      });
+    }
+
+    // Copy UID to clipboard
+    function copyToClipboard(uid) {
+      navigator.clipboard.writeText(uid).then(() => {
+        document.getElementById('copiedMessage').style.display = 'block'; // Show "Copied" message
+      }).catch(err => {
+        console.error('Failed to copy UID: ', err);
       });
     }
 
