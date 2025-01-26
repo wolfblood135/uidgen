@@ -29,12 +29,45 @@
       margin-top: 20px;
       font-size: 18px;
     }
+
+    #history {
+      margin-top: 20px;
+      text-align: left;
+      display: inline-block;
+      width: 300px;
+    }
+
+    details {
+      margin-top: 10px;
+    }
+
+    .copy-btn {
+      margin-left: 10px;
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
 <body>
   <h1>32-bit Unique ID Generator</h1>
   <button onclick="generateUID()">Generate UID</button>
   <div id="output"></div>
+
+  <div id="history">
+    <details>
+      <summary>View Generated UIDs</summary>
+      <ul id="uidList"></ul>
+    </details>
+  </div>
 
   <script>
     // Function to generate a 32-bit UID
@@ -55,7 +88,37 @@
       usedUIDs.push(uid);
       localStorage.setItem('usedUIDs', JSON.stringify(usedUIDs));
 
-      document.getElementById('output').innerText = `Generated UID: ${uid}`;
+      document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
+
+      updateUIDList(uid);
+    }
+
+    // Function to update the UID list
+    function updateUIDList(newUID) {
+      const uidList = document.getElementById('uidList');
+      const listItem = document.createElement('li');
+      listItem.textContent = newUID;
+      uidList.appendChild(listItem);
+    }
+
+    // Load existing UIDs on page load
+    window.onload = function() {
+      const usedUIDs = JSON.parse(localStorage.getItem('usedUIDs')) || [];
+      const uidList = document.getElementById('uidList');
+      usedUIDs.forEach(uid => {
+        const listItem = document.createElement('li');
+        listItem.textContent = uid;
+        uidList.appendChild(listItem);
+      });
+    };
+
+    // Function to copy UID to clipboard
+    function copyToClipboard(uid) {
+      navigator.clipboard.writeText(uid).then(() => {
+        alert(`UID ${uid} copied to clipboard!`);
+      }).catch(err => {
+        console.error('Failed to copy UID: ', err);
+      });
     }
   </script>
 </body>
