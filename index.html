@@ -92,30 +92,11 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
-
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyB1IUoArO_XZb7-dgo1XKeu9vWcgNBDJWQ",
-      authDomain: "uidgen-364db.firebaseapp.com",
-      databaseURL: "https://uidgen-364db-default-rtdb.firebaseio.com/",
-      projectId: "uidgen-364db",
-      storageBucket: "uidgen-364db.firebasestorage.app",
-      messagingSenderId: "768132034965",
-      appId: "1:768132034965:web:c12d77da876507cc6e469c"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
     // Precomputed hash of the password "20022002"
     const STORED_PASSWORD_HASH = "b79b34a3c1e0c74f64621f46b94cce23f3124e36642b5ae1735ef6bc4301f759";
 
-    // Function to hash a given string using SHA-256
+    // Function to hash a given string using SHA-256 (if necessary)
     async function hashString(str) {
       const encoder = new TextEncoder();
       const data = encoder.encode(str);
@@ -133,26 +114,26 @@
       if (hashedPassword === STORED_PASSWORD_HASH) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
-        loadUIDs(); // Load existing UIDs
+        loadUIDs(); // Load existing UIDs from localStorage
       } else {
         alert("Incorrect password!");
       }
     }
 
-    // Generate a 32-bit UID and save to Firebase
+    // Generate a 32-bit UID and save it to localStorage
     function generateUID() {
       const maxUID = 4294967295;
       const uid = Math.floor(Math.random() * (maxUID + 1));
+      
+      let uids = JSON.parse(localStorage.getItem('uids')) || [];
+      uids.push(uid);
+      localStorage.setItem('uids', JSON.stringify(uids));
 
-      firebase.database().ref('uids/' + uid).set({ uid })
-        .then(() => {
-          document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
-          updateUIDList(uid);
-        })
-        .catch(err => console.error('Error saving UID:', err));
+      document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
+      updateUIDList(uid);
     }
 
-    // Update UID list in the UI
+    // Update the UID list displayed in the UI
     function updateUIDList(uid) {
       const uidList = document.getElementById('uidList');
       const listItem = document.createElement('li');
@@ -160,16 +141,14 @@
       uidList.appendChild(listItem);
     }
 
-    // Load existing UIDs from Firebase
+    // Load existing UIDs from localStorage
     function loadUIDs() {
       const uidList = document.getElementById('uidList');
-      firebase.database().ref('uids').once('value', snapshot => {
-        snapshot.forEach(childSnapshot => {
-          const uid = childSnapshot.val().uid;
-          const listItem = document.createElement('li');
-          listItem.textContent = uid;
-          uidList.appendChild(listItem);
-        });
+      const uids = JSON.parse(localStorage.getItem('uids')) || [];
+      uids.forEach(uid => {
+        const listItem = document.createElement('li');
+        listItem.textContent = uid;
+        uidList.appendChild(listItem);
       });
     }
 
