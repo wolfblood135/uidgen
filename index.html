@@ -58,25 +58,18 @@
       background-color: #f2f2f2;
     }
 
-    .copy-btn {
-      margin-left: 10px;
-      padding: 5px 10px;
-      font-size: 14px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .copy-btn:hover {
-      background-color: #0056b3;
-    }
-
     #copiedMessage {
       font-size: 14px;
       margin-top: 10px;
       color: green;
+    }
+
+    details[open] summary {
+      font-weight: bold;
+    }
+
+    details summary {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -87,16 +80,18 @@
     <div id="output" onclick="copyToClipboard(generatedUID)"></div>
 
     <div id="history">
-      <table id="uidTable">
-        <thead>
-          <tr>
-            <th>UID</th>
-            <th>Generated At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="uidList"></tbody>
-      </table>
+      <details id="uidHistory">
+        <summary>View Generated UIDs</summary>
+        <table id="uidTable">
+          <thead>
+            <tr>
+              <th>UID</th>
+              <th>Generated At</th>
+            </tr>
+          </thead>
+          <tbody id="uidList"></tbody>
+        </table>
+      </details>
     </div>
 
     <div id="copiedMessage" style="display:none;">Copied</div>
@@ -115,7 +110,7 @@
       generatedUID = uid;
 
       let uids = JSON.parse(localStorage.getItem('uids')) || [];
-      uids.push({ uid, timestamp });
+      uids.unshift({ uid, timestamp });  // Add to the top of the list
       localStorage.setItem('uids', JSON.stringify(uids));
 
       document.getElementById('output').innerHTML = `Generated UID: ${uid}`;
@@ -123,6 +118,11 @@
 
       updateUIDList(uid, timestamp);
       document.getElementById('copiedMessage').style.display = 'none'; // Hide "Copied" message
+
+      // Ensure the history section is open when there are UIDs in the list
+      if (uids.length > 0) {
+        document.getElementById('uidHistory').open = true;
+      }
     }
 
     // Update the UID table with the newly generated UID and timestamp
@@ -130,9 +130,10 @@
       const uidList = document.getElementById('uidList');
       const row = document.createElement('tr');
 
-      // Create UID cell
+      // Create UID cell and make it clickable for copying
       const uidCell = document.createElement('td');
       uidCell.textContent = uid;
+      uidCell.onclick = () => copyToClipboard(uid);
       row.appendChild(uidCell);
 
       // Create Timestamp cell
@@ -140,17 +141,8 @@
       timestampCell.textContent = timestamp;
       row.appendChild(timestampCell);
 
-      // Create Actions cell with copy button
-      const actionsCell = document.createElement('td');
-      const copyButton = document.createElement('button');
-      copyButton.classList.add('copy-btn');
-      copyButton.textContent = 'Copy';
-      copyButton.onclick = () => copyToClipboard(uid);
-      actionsCell.appendChild(copyButton);
-      row.appendChild(actionsCell);
-
-      // Add the row to the table
-      uidList.appendChild(row);
+      // Add the row to the top of the table
+      uidList.insertBefore(row, uidList.firstChild);
     }
 
     // Load existing UIDs from localStorage and display them in the table
@@ -160,6 +152,11 @@
       uids.forEach(uidObj => {
         updateUIDList(uidObj.uid, uidObj.timestamp);
       });
+
+      // If there are no UIDs, hide the details section
+      if (uids.length === 0) {
+        document.getElementById('uidHistory').open = false;
+      }
     }
 
     // Copy UID to clipboard
