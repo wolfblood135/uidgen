@@ -55,31 +55,10 @@
     .copy-btn:hover {
       background-color: #0056b3;
     }
-
-    #login-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 50px;
-    }
-
-    #login-section input {
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-      width: 200px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
-  <div id="login-section">
-    <h1>Login</h1>
-    <input type="password" id="password" placeholder="Enter Password" />
-    <button onclick="checkPassword()">Login</button>
-  </div>
-
-  <div id="main-content" style="display: none;">
+  <div id="main-content">
     <h1>32-bit Unique ID Generator</h1>
     <button onclick="generateUID()">Generate UID</button>
     <div id="output"></div>
@@ -93,38 +72,11 @@
   </div>
 
   <script>
-    // Precomputed hash of the password "20022002"
-    const STORED_PASSWORD_HASH = "b79b34a3c1e0c74f64621f46b94cce23f3124e36642b5ae1735ef6bc4301f759";
-
-    // Function to hash a given string using SHA-256 (if necessary)
-    async function hashString(str) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(str);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      return Array.from(new Uint8Array(hashBuffer))
-        .map(byte => byte.toString(16).padStart(2, "0"))
-        .join("");
-    }
-
-    // Check password and show main content
-    async function checkPassword() {
-      const enteredPassword = document.getElementById('password').value;
-      const hashedPassword = await hashString(enteredPassword);
-
-      if (hashedPassword === STORED_PASSWORD_HASH) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        loadUIDs(); // Load existing UIDs from localStorage
-      } else {
-        alert("Incorrect password!");
-      }
-    }
-
     // Generate a 32-bit UID and save it to localStorage
     function generateUID() {
       const maxUID = 4294967295;
       const uid = Math.floor(Math.random() * (maxUID + 1));
-      
+
       let uids = JSON.parse(localStorage.getItem('uids')) || [];
       uids.push(uid);
       localStorage.setItem('uids', JSON.stringify(uids));
@@ -160,6 +112,9 @@
         console.error('Failed to copy UID: ', err);
       });
     }
+
+    // Load the existing UIDs when the page loads
+    window.onload = loadUIDs;
   </script>
 </body>
 </html>
