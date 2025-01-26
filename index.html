@@ -55,6 +55,21 @@
     .copy-btn:hover {
       background-color: #0056b3;
     }
+
+    .edit-btn {
+      margin-left: 10px;
+      padding: 5px 10px;
+      font-size: 14px;
+      background-color: #FFA500;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .edit-btn:hover {
+      background-color: #cc8400;
+    }
   </style>
 </head>
 <body>
@@ -69,50 +84,73 @@
     </details>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+
   <script>
-    // Function to generate a 32-bit UID
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Generate a 32-bit UID and save to Firebase
     function generateUID() {
-      const maxUID = 4294967295; // Maximum value for 32-bit
-      let usedUIDs = JSON.parse(localStorage.getItem('usedUIDs')) || [];
+      const maxUID = 4294967295;
+      const uid = Math.floor(Math.random() * (maxUID + 1));
 
-      if (usedUIDs.length >= maxUID + 1) {
-        document.getElementById('output').innerText = 'All possible UIDs have been generated!';
-        return;
-      }
-
-      let uid;
-      do {
-        uid = Math.floor(Math.random() * (maxUID + 1));
-      } while (usedUIDs.includes(uid));
-
-      usedUIDs.push(uid);
-      localStorage.setItem('usedUIDs', JSON.stringify(usedUIDs));
-
-      document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
-
-      updateUIDList(uid);
+      firebase.database().ref('uids/' + uid).set({ uid })
+        .then(() => {
+          document.getElementById('output').innerHTML = `Generated UID: ${uid} <button class="copy-btn" onclick="copyToClipboard(${uid})">Copy</button>`;
+          updateUIDList(uid);
+        })
+        .catch(err => console.error('Error saving UID:', err));
     }
 
-    // Function to update the UID list
-    function updateUIDList(newUID) {
+    // Update UID list in the UI
+    function updateUIDList(uid) {
       const uidList = document.getElementById('uidList');
       const listItem = document.createElement('li');
-      listItem.textContent = newUID;
+      listItem.innerHTML = `${uid} <button class="edit-btn" onclick="editUID(${uid})">Edit</button>`;
       uidList.appendChild(listItem);
     }
 
-    // Load existing UIDs on page load
-    window.onload = function() {
-      const usedUIDs = JSON.parse(localStorage.getItem('usedUIDs')) || [];
-      const uidList = document.getElementById('uidList');
-      usedUIDs.forEach(uid => {
-        const listItem = document.createElement('li');
-        listItem.textContent = uid;
-        uidList.appendChild(listItem);
-      });
-    };
+    // Edit a UID in Firebase
+    function editUID(uid) {
+      const newUID = prompt(`Edit UID (current: ${uid}):`);
+      if (newUID && !isNaN(newUID)) {
+        firebase.database().ref('uids/' + uid).remove()
+          .then(() => {
+            firebase.database().ref('uids/' + newUID).set({ uid: newUID })
+              .then(() => location.reload());
+          });
+      }
+    }
 
-    // Function to copy UID to clipboard
+    // Load existing UIDs from Firebase
+    function loadUIDs() {
+      const uidList = document.getElementById('uidList');
+      firebase.database().ref('uids').once('value', snapshot => {
+        snapshot.forEach(childSnapshot => {
+          const uid = childSnapshot.val().uid;
+          const listItem = document.createElement('li');
+          listItem.innerHTML = `${uid} <button class="edit-btn" onclick="editUID(${uid})">Edit</button>`;
+          uidList.appendChild(listItem);
+        });
+      });
+    }
+
+    // Copy UID to clipboard
     function copyToClipboard(uid) {
       navigator.clipboard.writeText(uid).then(() => {
         alert(`UID ${uid} copied to clipboard!`);
@@ -120,6 +158,9 @@
         console.error('Failed to copy UID: ', err);
       });
     }
+
+    // Load UIDs on page load
+    window.onload = loadUIDs;
   </script>
 </body>
 </html>
